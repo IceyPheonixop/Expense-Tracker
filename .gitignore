@@ -1,7 +1,13 @@
 # Dependencies
 node_modules/
 */node_modules/
-package-lock.json
+
+# Production / Build outputs
+dist/
+build/
+out/
+.next/
+.vercel/
 
 # Environment variables & secrets
 .env
