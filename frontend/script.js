@@ -2,7 +2,7 @@
 // Automatically targets localhost locally, and your live Render backend in production
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:5000/api/expenses'
-    : 'https://expense-tracker-1hzb.onrender.com/'; // 👈 Replace with your exact Render service URL
+    : 'https://expense-tracker-ejgm.onrender.com/'; // 👈 Replace with your exact Render service URL
 
 // --- Global State ---
 let allExpenses = []; // To store all expenses from the server
