@@ -1,9 +1,9 @@
 // --- API Configuration ---
 // Automatically targets localhost locally, and your live Render backend in production
+// --- API Configuration ---
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:5000/api/expenses'
-    : 'https://expense-tracker-ejgm.onrender.com/'; // 👈 Replace with your exact Render service URL
-
+    : 'https://expense-tracker-ejgm.onrender.com/api/expenses'; // 👈 Updated with your exact URL
 // --- Global State ---
 let allExpenses = []; // To store all expenses from the server
 let currentCategoryFilter = 'all'; // To store the current filter state
