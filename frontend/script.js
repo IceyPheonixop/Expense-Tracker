@@ -1,7 +1,12 @@
+// --- API Configuration ---
+// Automatically targets localhost locally, and your live Render backend in production
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000/api/expenses'
+    : 'https://expense-tracker-1hzb.onrender.com/'; // 👈 Replace with your exact Render service URL
+
 // --- Global State ---
 let allExpenses = []; // To store all expenses from the server
 let currentCategoryFilter = 'all'; // To store the current filter state
-const API_URL = '/api/expenses'; // The backend API endpoint
 
 // --- UI Elements ---
 const expenseListEl = document.getElementById('expense-list');
@@ -23,6 +28,10 @@ const categoryFilterEl = document.getElementById('category-filter');
  * @param {boolean} [isError=false] - If true, styles as an error (red).
  */
 function showMessage(message, isError = false) {
+    if (!messageModal || !messageText) {
+        alert(message);
+        return;
+    }
     messageText.textContent = message;
     messageModal.classList.remove('msg-success', 'msg-error', 'show');
     messageModal.classList.add(isError ? 'msg-error' : 'msg-success');
@@ -70,7 +79,9 @@ async function fetchExpenses() {
             categories.add(expense.category);
         });
 
-        totalExpensesEl.textContent = formatCurrency(total);
+        if (totalExpensesEl) {
+            totalExpensesEl.textContent = formatCurrency(total);
+        }
         populateCategoryFilter(categories);
         filterAndRenderExpenses();
 
@@ -80,7 +91,7 @@ async function fetchExpenses() {
 
     } catch (error) {
         console.error("Error fetching expenses:", error);
-        showMessage("Error fetching expenses. Please refresh.", true);
+        showMessage("Error connecting to server. Please wait a few seconds if Render is waking up.", true);
         if (loadingMessageEl) {
             loadingMessageEl.textContent = 'Could not load expenses.';
         }
@@ -92,6 +103,7 @@ async function fetchExpenses() {
  * @param {Array} expenses - An array of expense objects.
  */
 function renderExpenseList(expenses) {
+    if (!expenseListEl) return;
     expenseListEl.innerHTML = ''; // Clear current list
     if (expenses.length === 0) {
         if (currentCategoryFilter === 'all') {
@@ -122,7 +134,7 @@ function renderExpenseList(expenses) {
             </div>
             <div class="amount-actions">
                 <span class="amount">-${formatCurrency(expense.amount)}</span>
-                <button data-id="${expense._id}" class="delete-btn">
+                <button data-id="${expense._id}" class="delete-btn" type="button">
                     &times;
                 </button>
             </div>
@@ -136,6 +148,7 @@ function renderExpenseList(expenses) {
  * @param {Set<string>} categories - A set of unique category strings.
  */
 function populateCategoryFilter(categories) {
+    if (!categoryFilterEl) return;
     const selectedValue = categoryFilterEl.value;
     
     while (categoryFilterEl.options.length > 1) {
@@ -175,7 +188,7 @@ function filterAndRenderExpenses() {
 }
 
 async function handleAddExpense(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
     const description = descriptionInput.value.trim();
     const amount = parseFloat(amountInput.value);
@@ -200,7 +213,7 @@ async function handleAddExpense(e) {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.message || 'Failed to add expense');
         }
 
@@ -226,13 +239,17 @@ async function handleDeleteExpense(e) {
     const docId = deleteButton.getAttribute('data-id');
     if (!docId) return;
 
+    if (!confirm("Are you sure you want to delete this expense?")) {
+        return;
+    }
+
     try {
         const response = await fetch(`${API_URL}/${docId}`, {
             method: 'DELETE',
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.message || 'Failed to delete expense');
         }
 
@@ -247,10 +264,12 @@ async function handleDeleteExpense(e) {
 
 document.addEventListener('DOMContentLoaded', fetchExpenses);
 
-addExpenseForm.addEventListener('submit', handleAddExpense);
-expenseListEl.addEventListener('click', handleDeleteExpense);
+if (addExpenseForm) addExpenseForm.addEventListener('submit', handleAddExpense);
+if (expenseListEl) expenseListEl.addEventListener('click', handleDeleteExpense);
 
-categoryFilterEl.addEventListener('change', (e) => {
-    currentCategoryFilter = e.target.value;
-    filterAndRenderExpenses();
-});
+if (categoryFilterEl) {
+    categoryFilterEl.addEventListener('change', (e) => {
+        currentCategoryFilter = e.target.value;
+        filterAndRenderExpenses();
+    });
+}
